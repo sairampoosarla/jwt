@@ -26,8 +26,35 @@ const login = async (req, res) => {
 }
 
 const dashboard = async (req, res) => {
-    const randomNumber = Math.floor(Math.random()*100)
-    res.status(200).json({msg:'this is the message',secret:`this is the number ${randomNumber}`})
+
+    //we are printing the header so we can see the authorization token
+    console.log(req.headers.authorization)
+
+    const authHeader = req.headers.authorization
+    //we are checking if the request sent has the authorization token or if it dose not start with Bearer
+    if (!authHeader || !authHeader.startsWith('Bearer ')){
+        throw new CustomAPIError("authorization token is not provided or Bearer is not added to it",401)
+    }
+
+    //we are getting the token from the header
+    const token = authHeader.split(' ')[1]
+
+    //we are decoading the token to see if it is a valid token
+    try{
+        //decoading the token, by passing the token and secret phrase to the jwt function
+        const decoaded = jwt.verify(token, process.env.JWT_SECRET)
+        //printing the deacoded string
+        console.log(decoaded)
+        //getting the username and adding it back in the message to make it unique
+        const username = decoaded.username
+        const randomNumber = Math.floor(Math.random()*100)
+        res.status(200).json({msg:`hi ${username},`,secret:`this is the number ${randomNumber}`})
+    }
+    catch (error) {
+        console.log(error)
+        throw new CustomAPIError('error in validating the token', 401)
+    }
+    
 }
 
-module.exports = {login, dashboard}
+module.exports = {login, dashboard} 
